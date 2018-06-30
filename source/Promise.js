@@ -5,10 +5,14 @@ class Promise {
         this.value = undefined
         this.reason = undefined
 
+        this.onResolvedCallbacks = []
+        this.onRejectedCallbacks = []
+
         let resolve = value => {
             if (this.state === 'pending') {
                 this.state = 'fulfilled'
                 this.value = value
+                this.onResolvedCallbacks.forEach(fn => fn())
             }
         }
 
@@ -16,6 +20,7 @@ class Promise {
             if (this.state === 'pending') {
                 this.state = 'rejected'
                 this.reason = reason
+                this.onRejectedCallbacks.forEach(fn => fn())
             }
         }
 
@@ -33,6 +38,15 @@ class Promise {
 
         if (this.state === 'rejected') {
             onRejected(this.reason)
+        }
+
+        if (this.state === 'pending') {
+            this.onResolvedCallbacks.push(() => {
+                onFulfilled(this.value)
+            })
+            this.onRejectedCallbacks.push(() => {
+                onRejected(this.reason)
+            })
         }
     }
 }
