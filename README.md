@@ -2,6 +2,8 @@
 
 Promise 是 JavaScript 的一个异步解决方案，我们一起理解它的实现原理。
 
+首先需要理解 [Promises/A+ 规范](./spec/README.md)
+
 [Promise 实现源码](./source/Promise.js)
 
 ## REF
