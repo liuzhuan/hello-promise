@@ -26,33 +26,41 @@ Finally, the core Promises/A+ specification does not deal with how to create, fu
 
 A promise must be in one of three states: pending, fulfilled, or rejected.
 
-When pending, a promise:
-may transition to either the fulfilled or rejected state.
-When fulfilled, a promise:
-must not transition to any other state.
-must have a value, which must not change.
-When rejected, a promise:
-must not transition to any other state.
-must have a reason, which must not change.
+#### When pending, a promise:
+- may transition to either the fulfilled or rejected state.
+#### When fulfilled, a promise:
+- must not transition to any other state.
+- must have a value, which must not change.
+#### When rejected, a promise:
+- must not transition to any other state.
+- must have a reason, which must not change.
+
 Here, “must not change” means immutable identity (i.e. ===), but does not imply deep immutability.
 
-The then Method
+### 2.2 The `then` Method
+
 A promise must provide a then method to access its current or eventual value or reason.
 
 A promise’s then method accepts two arguments:
 
+```js
 promise.then(onFulfilled, onRejected)
+```
+
 Both onFulfilled and onRejected are optional arguments:
-If onFulfilled is not a function, it must be ignored.
-If onRejected is not a function, it must be ignored.
+- If onFulfilled is not a function, it must be ignored.
+- If onRejected is not a function, it must be ignored.
+
 If onFulfilled is a function:
-it must be called after promise is fulfilled, with promise’s value as its first argument.
-it must not be called before promise is fulfilled.
-it must not be called more than once.
+- it must be called after promise is fulfilled, with promise’s value as its first argument.
+- it must not be called before promise is fulfilled.
+- it must not be called more than once.
+
 If onRejected is a function,
-it must be called after promise is rejected, with promise’s reason as its first argument.
-it must not be called before promise is rejected.
-it must not be called more than once.
+- it must be called after promise is rejected, with promise’s reason as its first argument.
+- it must not be called before promise is rejected.
+- it must not be called more than once.
+
 onFulfilled or onRejected must not be called until the execution context stack contains only platform code. [3.1].
 onFulfilled and onRejected must be called as functions (i.e. with no this value). [3.2]
 then may be called multiple times on the same promise.
@@ -91,15 +99,16 @@ If then is not a function, fulfill promise with x.
 If x is not an object or function, fulfill promise with x.
 If a promise is resolved with a thenable that participates in a circular thenable chain, such that the recursive nature of [[Resolve]](promise, thenable) eventually causes [[Resolve]](promise, thenable) to be called again, following the above algorithm will lead to infinite recursion. Implementations are encouraged, but not required, to detect such recursion and reject promise with an informative TypeError as the reason. [3.6]
 
-Notes
-Here “platform code” means engine, environment, and promise implementation code. In practice, this requirement ensures that onFulfilled and onRejected execute asynchronously, after the event loop turn in which then is called, and with a fresh stack. This can be implemented with either a “macro-task” mechanism such as setTimeout or setImmediate, or with a “micro-task” mechanism such as MutationObserver or process.nextTick. Since the promise implementation is considered platform code, it may itself contain a task-scheduling queue or “trampoline” in which the handlers are called.
+## 3. Notes
 
-That is, in strict mode this will be undefined inside of them; in sloppy mode, it will be the global object.
+3.1 Here “platform code” means engine, environment, and promise implementation code. In practice, this requirement ensures that onFulfilled and onRejected execute asynchronously, after the event loop turn in which then is called, and with a fresh stack. This can be implemented with either a “macro-task” mechanism such as setTimeout or setImmediate, or with a “micro-task” mechanism such as MutationObserver or process.nextTick. Since the promise implementation is considered platform code, it may itself contain a task-scheduling queue or “trampoline” in which the handlers are called.
 
-Implementations may allow promise2 === promise1, provided the implementation meets all requirements. Each implementation should document whether it can produce promise2 === promise1 and under what conditions.
+3.2 That is, in strict mode this will be undefined inside of them; in sloppy mode, it will be the global object.
 
-Generally, it will only be known that x is a true promise if it comes from the current implementation. This clause allows the use of implementation-specific means to adopt the state of known-conformant promises.
+3.3 Implementations may allow promise2 === promise1, provided the implementation meets all requirements. Each implementation should document whether it can produce promise2 === promise1 and under what conditions.
 
-This procedure of first storing a reference to x.then, then testing that reference, and then calling that reference, avoids multiple accesses to the x.then property. Such precautions are important for ensuring consistency in the face of an accessor property, whose value could change between retrievals.
+3.4 Generally, it will only be known that x is a true promise if it comes from the current implementation. This clause allows the use of implementation-specific means to adopt the state of known-conformant promises.
 
-Implementations should not set arbitrary limits on the depth of thenable chains, and assume that beyond that arbitrary limit the recursion will be infinite. Only true cycles should lead to a TypeError; if an infinite chain of distinct thenables is encountered, recursing forever is the correct behavior.
+3.5 This procedure of first storing a reference to x.then, then testing that reference, and then calling that reference, avoids multiple accesses to the x.then property. Such precautions are important for ensuring consistency in the face of an accessor property, whose value could change between retrievals.
+
+3.6 Implementations should not set arbitrary limits on the depth of thenable chains, and assume that beyond that arbitrary limit the recursion will be infinite. Only true cycles should lead to a TypeError; if an infinite chain of distinct thenables is encountered, recursing forever is the correct behavior.  
