@@ -32,31 +32,62 @@ class Promise {
     }
 
     then(onFulfilled, onRejected) {
+        onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : value => value
+        onRejected = typeof onRejected === 'function' ? onRejected : err => { throw err }
         let promise2 = new Promise((resolve, reject) => {
             if (this.state === 'fulfilled') {
-                let x = onFulfilled(this.value)
-                // resolvePromise 函数，处理自己 return 的 promise 和默认的 promise2 的关系
-                resolvePromise(promise2, x, resolve, reject)
+                setTimeout(() => {
+                    try {
+                        let x = onFulfilled(this.value)
+                        // resolvePromise 函数，处理自己 return 的 promise 和默认的 promise2 的关系
+                        resolvePromise(promise2, x, resolve, reject)
+                    } catch(e) {
+                        reject(e)
+                    }
+                }, 0)
             }
     
             if (this.state === 'rejected') {
-                let x = onRejected(this.reason)
-                resolvePromise(promise2, x, resolve, reject)
+                setTimeout(() => {
+                    try {
+                        let x = onRejected(this.reason)
+                        resolvePromise(promise2, x, resolve, reject)
+                    } catch(e) {
+                        reject(e)
+                    }
+                }, 0)
             }
     
             if (this.state === 'pending') {
                 this.onResolvedCallbacks.push(() => {
-                    let x = onFulfilled(this.value)
-                    resolvePromise(promise2, x, resolve, reject)
+                    setTimeout(() => {
+                        try {
+                            let x = onFulfilled(this.value)
+                            resolvePromise(promise2, x, resolve, reject)
+                        } catch(e) {
+                            reject(e)
+                        }
+                    }, 0)
                 })
+
                 this.onRejectedCallbacks.push(() => {
-                    onRejected(this.reason)
-                    resolvePromise(promise2, x, resolve, reject)
+                    setTimeout(() => {
+                        try {
+                            onRejected(this.reason)
+                            resolvePromise(promise2, x, resolve, reject)
+                        } catch(e) {
+                            reject(e)
+                        }
+                    }, 0)
                 })
             }
         })
 
         return promise2
+    }
+
+    catch(fn) {
+        return this.then(null, fn)
     }
 }
 
@@ -91,6 +122,46 @@ function resolvePromise(promise2, x, resolve, reject) {
     } else {
         resolve(x)
     }
+}
+
+Promise.resolve = function(val) {
+    return new Promise((resolve, reject) => {
+        resolve(val)
+    })
+}
+
+Promise.reject = function(val) {
+    return new Promise((resolve, reject) => {
+        reject(val)
+    })
+}
+
+Promise.race = function(promises) {
+    return new Promise((resolve, reject) => {
+        for (let i = 0; i < promises.length; i++) {
+            promises[i].then(resolve, reject)
+        }
+    })
+}
+
+Promise.all = function(promises) {
+    let arr = []
+    let i = 0
+    function processData(index, data) {
+        arr[index] = data
+        i++
+        if (i == promises.length) {
+            resolve(arr)
+        }
+    }
+
+    return new Promise((resolve, reject) => {
+        for (let i = 0; i < promises.length; i++) {
+            promises[i].then(data => {
+                processData(i, data)
+            }, reject)
+        }
+    })
 }
 
 // Test Demo
